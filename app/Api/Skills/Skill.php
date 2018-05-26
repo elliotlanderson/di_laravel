@@ -15,4 +15,9 @@ class Skill extends Model
     {
         return $this->belongsToMany('App\User');
     }
+
+    public function ideas()
+    {
+        return $this->belongsToMany('App\Api\Ideas\Idea');
+    }
 }

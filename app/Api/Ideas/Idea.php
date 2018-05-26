@@ -20,4 +20,10 @@ class Idea extends Model
     {
         return $this->hasMany('App\Api\Comments\Comment');
     }
+
+    public function skills()
+    {
+        return $this->hasMany('App\Api\Skills\Skill');
+    }
+
 }
