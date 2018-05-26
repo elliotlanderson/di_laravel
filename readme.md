@@ -1,60 +1,86 @@
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+# DragInspire Documentation
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+This documentation outlines the following:
 
-## About Laravel
+* API Endpoints
+* Model Definitions
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## API Endpoints
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+**HTTP Header Required** <br>
+In order for the data response to be consistent throughout the requests, you need
+to add to *any* request you send to the server the following: <br>
+`Content-type: application/json` <br>
+Check the VueJs Documentation to see how to add this, as well as other javascript libraries. 
+There should be a pool of resources to make it simple to add this.
 
-## Learning Laravel
+### Authentication
+Authentication is broken down into two main components -- login and registration. This portion deals with how to *create* a user and how to maintain user session (keep them logged in).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+#### Routes
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+* Create/Register a User
 
-## Laravel Sponsors
+	**URI**: `POST /api/user` <br>
+	Form-Data Required: 
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+	| Key          | Type   | Default | Additional Information       |
+	| ------------ | ------ | ------- | ---------------------------- |
+	| email        | String | null    | Must be an @drexel.edu email |  
+	| first_name   | String | null    | User's first name            |
+	| last_name    | String | null    | User's last name             |
+	| password     | String | null    | User's *unhashed* password   |
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
+	**Backend Logic**
+	The backend creates an instance of the User, with a unique id (assuming all the information passes the validation), and designates a `verification_code` property with a string that can be used to verify the user *before* they can access their account.  The `verified` property will remain `False` until the verification URI has been called.
+	On top of this, the backend also generates a token so you can keep accessing the server signed in as that user.<br>
+	##### Headers
+	To get this key, after you have registered a user, visit the uri:
+	
+	 `/oauth/token` <br>
+	 
+     |Key               | Value                                    | Comments  |
+     | ---------------- | ------------------------------------------ | ----------------------- |
+     | username         | user's email                               |                         |
+     | password         | user's unhashed password                   |                         |
+     | client_id        | 4                                          | Just the number 3       |
+     | client_secret    | '0vcaLptRUjPJGcPH8lCNCMWymycHFTUl6Okypuu2' | String literal          |
+     | grant_type       | 'password'                                 | String Literal          |
+     | scope            | '*'                                        | The string literal *    |
 
-## Contributing
+     Using this data, you want to add to your headers:
+     <br>
+     `Authorization: Bearer +{access_token} `
+     The access token will be in the HTTP response from the `/oauth/token` request.	 
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-## Security Vulnerabilities
+	Return-Data:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+	| Key          		| Type   | Additional Information            | 
+	| ------------ 		| ------ | ------------------------------    |
+	| id           		| Int    | Auto-generated by the database    | 
+	| first_name   		| String | User's first name 			     |
+	| last_name    		| String | User's last name 			     |
+	| email 	   		| String | User's email address 		     |
+	| verification_code | String | Code to verify user  			 |
+	| verified  	    | Boolean| Whether the user is verified      | 
 
-## License
+	*Note: The user's password is not returned for security reasons*
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+* Verify User
+	
+	**URI**: `GET /api/user/{verification_code}` <br>
+	**Backend Logic**
+	The verification code in the URL is harvested and checked against any unverified users in the database.  If there is a match, the server will return the respective user object.  Otherwise, it will return an error.
+
+* Login
+	
+	**URI**: `POST /api/user/login` <br>
+	Form-Data Required:
+
+	| Key          		| Type   | Additional Information            | 
+	| ----------------- | ------ | --------------------------------- |
+	| email             | String | 									 |
+	| password 			| String | Unhashed password (raw form data) |			 
+
