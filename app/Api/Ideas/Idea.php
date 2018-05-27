@@ -23,7 +23,7 @@ class Idea extends Model
 
     public function skills()
     {
-        return $this->hasMany('App\Api\Skills\Skill');
+        return $this->belongsToMany('App\Api\Skills\Skill');
     }
 
 }

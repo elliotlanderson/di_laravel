@@ -33,4 +33,11 @@ Route::middleware('auth:api')->group(function() {
 
     Route::get('/', 'DashboardController@home');
 
+    Route::namespace('Ideas')->group(function(){
+
+        Route::get('/idea', 'IdeaController@all');
+        Route::post('/idea', 'IdeaController@create');
+        Route::get('/idea/{idea}', 'IdeaController@detail');
+    });
+
 });
