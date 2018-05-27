@@ -30,7 +30,7 @@ class User extends Authenticatable
 
     public function ideas()
     {
-        return $this->belongsToMany('App\User');
+        return $this->belongsToMany('App\Api\Ideas\Idea');
     }
 
     public function user_ideas()
