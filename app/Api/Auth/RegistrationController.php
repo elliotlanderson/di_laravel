@@ -34,10 +34,13 @@ class RegistrationController extends Controller
 
         # Create the User instance
         $user = new User();
-        $user->first_name = $input['first_name'];
-        $user->last_name = $input['last_name'];
+        $user->first_name = $input['firstName'];
+        $user->last_name = $input['lastName'];
         $user->email = $input['email'];
         $user->password = Hash::make($input['password']);
+        $user->grad_year = $input['gradYear'];
+        $user->college = $input['college'];
+        $user->major = $input['major'];
 
         # Generate the random code
         $verification_code = str_random(15);
